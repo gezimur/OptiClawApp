@@ -17,7 +17,41 @@ struct ChatSession: Identifiable {
 @MainActor
 class ChatHistoryManager: ObservableObject {
     @Published var sessions: [ChatSession] = []
+    private var activeSessionID: UUID? = nil
 
+    func makeSessionActive(id: UUID){
+        if sessions.contains(where: {$0.id == id}) {
+            activeSessionID = id
+        }
+    }
+    
+    func getActiveSessionMessages() -> [Message] {
+        if activeSessionID != nil{
+            if let activeSession = sessions.first(where: {$0.id == activeSessionID!}) {
+                return activeSession.messages
+            }
+        }
+        return []
+    }
+    
+    func updateActiveSession(messages: [Message]) {
+        if activeSessionID != nil{
+            if let idx = sessions.firstIndex(where: {$0.id == activeSessionID!}) {
+                sessions[idx].messages = messages
+            }
+        } else {
+            self.saveSession(messages: messages, category: nil)
+        }
+    }
+    
+    func closeActiveSession() {
+        activeSessionID = nil
+    }
+    
+    func hasActiveSession() -> Bool {
+        return activeSessionID != nil
+    }
+    
     func saveSession(messages: [Message], category: ChatCategory?) {
         guard !messages.isEmpty else { return }
         let title = category?.rawValue ?? messages.first(where: { $0.isUser })?.content.prefix(40).description ?? "New Chat"

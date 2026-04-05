@@ -24,12 +24,6 @@ class ChatViewModel: ObservableObject {
         messages.append(aiMessage)
     }
 
-    func startNewChat() {
-        messages = []
-        selectedCategory = nil
-        showNewChatSheet = false
-    }
-
     func copyMessage(_ message: Message) {
         UIPasteboard.general.string = message.content
         showCopiedToast = true

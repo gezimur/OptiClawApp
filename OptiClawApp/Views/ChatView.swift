@@ -11,6 +11,8 @@ struct ChatView: View {
     @State private var selectedImageItem: PhotosPickerItem?
     @State private var pendingImage: UIImage?
 
+    let startNewChat: () -> Void
+    
     private var keyboardWillShow: AnyPublisher<Notification, Never> {
         NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
             .eraseToAnyPublisher()
@@ -147,7 +149,6 @@ struct ChatView: View {
                 inputBar
             }
 
-
             // Copied toast
             if viewModel.showCopiedToast {
                 VStack {
@@ -164,7 +165,11 @@ struct ChatView: View {
                 VStack {
                     Spacer()
                     NewChatSheetView(
-                        onStartNew: { viewModel.startNewChat() },
+                        onStartNew: {
+                            startNewChat()
+                            viewModel.selectedCategory = nil
+                            viewModel.showNewChatSheet = false
+                        },
                         onCancel: { viewModel.showNewChatSheet = false }
                     ).padding(.bottom, 10)
                 }

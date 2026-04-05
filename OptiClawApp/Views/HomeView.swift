@@ -98,17 +98,32 @@ struct HomeView: View {
             }
             .onChange(of: navigateToChat) {
                 if navigateToChat {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    if historyManager.hasActiveSession() {
+                        viewModel.messages = historyManager.getActiveSessionMessages()
+                    } else {
+                        historyManager.updateActiveSession(messages: viewModel.messages)
+                    }
+                } else {
+                    historyManager.updateActiveSession(messages: viewModel.messages)
+                    historyManager.closeActiveSession()
                 }
             }
             .navigationDestination(isPresented: $navigateToChat) {
-                ChatView(viewModel: viewModel)
+                ChatView(viewModel: viewModel, startNewChat: {
+                    historyManager.updateActiveSession(messages: viewModel.messages)
+                    historyManager.closeActiveSession()
+                    
+                    viewModel.messages = historyManager.getActiveSessionMessages()
+                })
             }
             .navigationDestination(isPresented: $navigateToSettings) {
                 SettingsView()
             }
             .navigationDestination(isPresented: $navigateToHistory) {
-                HistoryView(historyManager: historyManager)
+                HistoryView(historyManager: historyManager, loadSession: {
+                    navigateToHistory = false
+                    navigateToChat = true
+                })
             }
             .overlay {
                 if viewModel.showAttachmentSheet {

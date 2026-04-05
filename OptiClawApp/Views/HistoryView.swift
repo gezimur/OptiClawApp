@@ -4,6 +4,8 @@ struct HistoryView: View {
     @ObservedObject var historyManager: ChatHistoryManager
     @Environment(\.dismiss) private var dismiss
     @State private var showClearConfirm = false
+    
+    let loadSession: () -> Void
 
     var body: some View {
         ZStack {
@@ -78,7 +80,10 @@ struct HistoryView: View {
                 } else {
                     List {
                         ForEach(historyManager.sessions) { session in
-                            NavigationLink(value: session.id) {
+                            Button(action: {
+                                historyManager.makeSessionActive(id: session.id)
+                                loadSession()
+                            }){
                                 HStack(spacing: 12) {
                                     Image("mascot")
                                         .resizable()
@@ -110,6 +115,7 @@ struct HistoryView: View {
                                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
+                            .id(session.id)//(value: )
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
