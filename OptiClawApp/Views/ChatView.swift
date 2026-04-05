@@ -1,11 +1,15 @@
 import SwiftUI
 import Combine
+import PhotosUI
 
 struct ChatView: View {
     @ObservedObject var viewModel: ChatViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
+    @State private var showImagePicker = false
+    @State private var selectedImageItem: PhotosPickerItem?
+    @State private var pendingImage: UIImage?
 
     private var keyboardWillShow: AnyPublisher<Notification, Never> {
         NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
@@ -116,6 +120,29 @@ struct ChatView: View {
                     }
                 }
 
+                // Pending image preview
+                if let img = pendingImage {
+                    HStack(spacing: 8) {
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.borderColor, lineWidth: 1))
+                        Button {
+                            pendingImage = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 4)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+
                 // Input bar
                 inputBar
             }
@@ -151,7 +178,10 @@ struct ChatView: View {
                 VStack {
                     Spacer()
                     AttachmentSheetView(
-                        onPickFromLibrary: { viewModel.showAttachmentSheet = false },
+                        onPickFromLibrary: {
+                            viewModel.showAttachmentSheet = false
+                            showImagePicker = true
+                        },
                         onSnapPicture: { viewModel.showAttachmentSheet = false },
                         onCancel: { viewModel.showAttachmentSheet = false }
                     ).padding(.bottom, 10)
@@ -163,6 +193,17 @@ struct ChatView: View {
         .animation(.easeInOut(duration: 0.3), value: viewModel.showAttachmentSheet)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .photosPicker(isPresented: $showImagePicker, selection: $selectedImageItem, matching: .images)
+        .onChange(of: selectedImageItem) {
+            guard let item = selectedImageItem else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    await MainActor.run { pendingImage = image }
+                }
+                await MainActor.run { selectedImageItem = nil }
+            }
+        }
     }
 
     // MARK: - Scroll Edge Fade Mask
@@ -316,15 +357,16 @@ struct ChatView: View {
 
     private var sendButton: some View {
         Button {
-            guard !inputText.isEmpty else { return }
-            viewModel.sendMessage(inputText)
+            guard !inputText.isEmpty || pendingImage != nil else { return }
+            viewModel.sendMessage(inputText, image: pendingImage)
             inputText = ""
+            pendingImage = nil
         } label: {
             Image(systemName: "arrow.up")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(inputText.isEmpty ? 0.4 : 1))
+                .foregroundColor(.white.opacity((inputText.isEmpty && pendingImage == nil) ? 0.4 : 1))
                 .frame(width: 38, height: 38)
-                .background(inputText.isEmpty ? AnyShapeStyle(AppTheme.sendBtnBg) : AnyShapeStyle(AppTheme.ctaGradient))
+                .background((inputText.isEmpty && pendingImage == nil) ? AnyShapeStyle(AppTheme.sendBtnBg) : AnyShapeStyle(AppTheme.ctaGradient))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
