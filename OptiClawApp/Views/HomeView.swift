@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct HomeView: View {
     @StateObject private var viewModel = ChatViewModel()
@@ -8,6 +9,10 @@ struct HomeView: View {
     @State private var navigateToHistory = false
     @State private var inputText = ""
 
+    @State private var showImagePicker = false
+    @State private var selectedImageItem: PhotosPickerItem?
+    @State private var pendingImage: UIImage?
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -89,6 +94,29 @@ struct HomeView: View {
 
                     Spacer()
 
+                    // Pending image preview
+                    if let img = pendingImage {
+                        HStack(spacing: 8) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 56, height: 56)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.borderColor, lineWidth: 1))
+                            Button {
+                                pendingImage = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.white.opacity(0.5))
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 4)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
+                    
                     // Input
                     inputBar
                 }
@@ -135,7 +163,10 @@ struct HomeView: View {
                         VStack {
                             Spacer()
                             AttachmentSheetView(
-                                onPickFromLibrary: { viewModel.showAttachmentSheet = false },
+                                onPickFromLibrary: {
+                                    viewModel.showAttachmentSheet = false
+                                    showImagePicker = true
+                                },
                                 onSnapPicture: { viewModel.showAttachmentSheet = false },
                                 onCancel: { viewModel.showAttachmentSheet = false }
                             )
@@ -144,6 +175,17 @@ struct HomeView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     .animation(.easeInOut(duration: 0.3), value: viewModel.showAttachmentSheet)
+                }
+            }
+            .photosPicker(isPresented: $showImagePicker, selection: $selectedImageItem, matching: .images)
+            .onChange(of: selectedImageItem) {
+                guard let item = selectedImageItem else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        await MainActor.run { pendingImage = image }
+                    }
+                    await MainActor.run { selectedImageItem = nil }
                 }
             }
         }
@@ -190,17 +232,17 @@ struct HomeView: View {
                     .foregroundColor(.white)
                     .lineLimit(1...6)
 
-                if inputText.isEmpty {
+                //if inputText.isEmpty || pendingImage != nil{
                     homeSendButton
-                } else {
-                    Button {
-                        inputText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                }
+                //} else {
+                //    Button {
+                //        inputText = ""
+                //    } label: {
+                //        Image(systemName: "xmark.circle.fill")
+                //            .font(.system(size: 20))
+                //            .foregroundColor(.white.opacity(0.3))
+                //    }
+                //}
             }
 
             if !inputText.isEmpty {
@@ -234,16 +276,17 @@ struct HomeView: View {
 
     private var homeSendButton: some View {
         Button {
-            guard !inputText.isEmpty else { return }
-            viewModel.sendMessage(inputText)
+            guard !inputText.isEmpty || pendingImage != nil else { return }
+            viewModel.sendMessage(inputText, image: pendingImage)
             inputText = ""
+            pendingImage = nil
             navigateToChat = true
         } label: {
             Image(systemName: "arrow.up")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white.opacity(inputText.isEmpty ? 0.4 : 1))
                 .frame(width: 38, height: 38)
-                .background(inputText.isEmpty ? AnyShapeStyle(AppTheme.sendBtnBg) : AnyShapeStyle(AppTheme.ctaGradient))
+                .background(inputText.isEmpty && pendingImage == nil ? AnyShapeStyle(AppTheme.sendBtnBg) : AnyShapeStyle(AppTheme.ctaGradient))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }

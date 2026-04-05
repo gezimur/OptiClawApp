@@ -7,6 +7,7 @@ struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
+    
     @State private var showImagePicker = false
     @State private var selectedImageItem: PhotosPickerItem?
     @State private var pendingImage: UIImage?
