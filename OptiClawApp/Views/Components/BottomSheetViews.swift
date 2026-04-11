@@ -131,6 +131,98 @@ struct AttachmentSheetView: View {
     }
 }
 
+// MARK: - Paywall Sheet
+struct PaywallView: View {
+    let onUpgrade: () -> Void
+    let onDismiss: () -> Void
+
+    private let features: [(String, String)] = [
+        ("infinity", "Unlimited messages"),
+        ("photo.on.rectangle.angled", "Image attachments"),
+        ("bolt.fill", "Faster responses"),
+        ("person.fill.checkmark", "Priority support")
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Icon badge
+            ZStack {
+                Circle()
+                    .fill(AppTheme.ctaGradient)
+                    .frame(width: 64, height: 64)
+                Image(systemName: "crown.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .padding(.top, 24)
+
+            Text("Unlock Pro")
+                .font(AppTheme.medium(24))
+                .foregroundColor(.white)
+                .padding(.top, 14)
+
+            Text("You've used your free messages.\nUpgrade to keep chatting.")
+                .font(AppTheme.light(14))
+                .foregroundColor(AppTheme.secondaryText)
+                .multilineTextAlignment(.center)
+                .padding(.top, 6)
+
+            // Feature list
+            VStack(spacing: 10) {
+                ForEach(features, id: \.0) { icon, label in
+                    HStack(spacing: 12) {
+                        Image(systemName: icon)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                            .background(AppTheme.ctaGradient)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        Text(label)
+                            .font(AppTheme.regular(15))
+                            .foregroundColor(.white)
+                        Spacer()
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(AppTheme.gradientStart)
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(height: 52)
+                    .background(AppTheme.cardBg)
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+            }
+            .padding(.top, 18)
+
+            // Buttons
+            VStack(spacing: 10) {
+                Button(action: onUpgrade) {
+                    Text("Continue with Pro")
+                        .font(AppTheme.medium(16))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 58)
+                        .background(AppTheme.ctaGradient)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+
+                Button(action: onDismiss) {
+                    Text("Maybe later")
+                        .font(AppTheme.regular(15))
+                        .foregroundColor(AppTheme.secondaryText)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                }
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 6)
+        }
+        .padding(.horizontal, 14)
+        .padding(.bottom, 8)
+        .modifier(PopupBackground())
+    }
+}
+
 // MARK: - Copied Toast
 struct CopiedToastView: View {
     var body: some View {

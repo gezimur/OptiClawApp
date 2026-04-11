@@ -200,6 +200,23 @@ struct ChatView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
+            // Paywall
+            if viewModel.showPaywall {
+                Color.black.opacity(0.6).ignoresSafeArea()
+                    .onTapGesture { viewModel.showPaywall = false }
+                VStack {
+                    Spacer()
+                    PaywallView(
+                        onUpgrade: {
+                            viewModel.isProUser = true
+                            viewModel.showPaywall = false
+                        },
+                        onDismiss: { viewModel.showPaywall = false }
+                    ).padding(.bottom, 10)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+
             // Attachment popup
             if viewModel.showAttachmentSheet {
                 Color.black.opacity(0.6).ignoresSafeArea()
@@ -220,6 +237,7 @@ struct ChatView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.showNewChatSheet)
         .animation(.easeInOut(duration: 0.3), value: viewModel.showAttachmentSheet)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showPaywall)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .photosPicker(isPresented: $showImagePicker, selection: $selectedImageItem, matching: .images)

@@ -10,8 +10,20 @@ class ChatViewModel: ObservableObject {
     @Published var showCopiedToast = false
     @Published var networkError: String?
     @Published var selectedCategory: ChatCategory?
+    @Published var showPaywall = false
+
+    var isProUser = false
+    private let freeMessageLimit = 3
+    var userMessageCount: Int { messages.filter(\.isUser).count }
 
     func sendMessage(_ text: String, image: UIImage? = nil) {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || image != nil else { return }
+
+        if !isProUser && userMessageCount >= freeMessageLimit {
+            showPaywall = true
+            return
+        }
+
         let userMessage = Message(content: text, isUser: true, image: image)
         messages.append(userMessage)
         simulateAIResponse()
