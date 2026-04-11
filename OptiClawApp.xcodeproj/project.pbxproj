@@ -24,6 +24,7 @@
 		A7ACB3ABCE272E569E1ACDC2 /* PoppinsSemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1E288BA1C1F160F144E3A25 /* PoppinsSemiBold.ttf */; };
 		ABCED88BE13C5CF6A7D811D2 /* BottomSheetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A70F3B5CBF324446A10A91 /* BottomSheetViews.swift */; };
 		ACF1AC1F599D700315C2C902 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05EF33C279CE92569CB63B00 /* Message.swift */; };
+		B279CDD12F8A8A71009BEDA1 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B279CDD02F8A8A6C009BEDA1 /* CacheManager.swift */; };
 		BE4A83AD6D47ED5630F7C3A1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8746347AB5E9AD4888CE854 /* ChatView.swift */; };
 		FDEB43B51022B685CA7979B7 /* OptiClawApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0EF57607A25D4B242B8465 /* OptiClawApp.swift */; };
 /* End PBXBuildFile section */
@@ -45,6 +46,7 @@
 		73A70F3B5CBF324446A10A91 /* BottomSheetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetViews.swift; sourceTree = "<group>"; };
 		89D4C478D3D2A0977F8536ED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1E288BA1C1F160F144E3A25 /* PoppinsSemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = PoppinsSemiBold.ttf; sourceTree = "<group>"; };
+		B279CDD02F8A8A6C009BEDA1 /* CacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
 		D8746347AB5E9AD4888CE854 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		DDB5256259FC33FCD0B137F1 /* MessageBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleView.swift; sourceTree = "<group>"; };
 		E1E786A2A890CE643FD8F56A /* TypingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIndicatorView.swift; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 		231910A39D7D2C1871DBC7A2 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B279CDD02F8A8A6C009BEDA1 /* CacheManager.swift */,
 				17E17EB421059A070A2F663E /* ChatCategory.swift */,
 				32DA1377F3C931F562624434 /* ChatHistory.swift */,
 				FE006606EECE596ABA3CECA7 /* ChatViewModel.swift */,
@@ -225,6 +228,7 @@
 				67A48E63C9FD8AC963BDF2F4 /* ChatHistory.swift in Sources */,
 				BE4A83AD6D47ED5630F7C3A1 /* ChatView.swift in Sources */,
 				9ADCC025EE078D5FB3629670 /* ChatViewModel.swift in Sources */,
+				B279CDD12F8A8A71009BEDA1 /* CacheManager.swift in Sources */,
 				499B45C840AB6E4A75BB4E5C /* HistoryView.swift in Sources */,
 				49DB39EFBEA85E9A34D114DC /* MainView.swift in Sources */,
 				ACF1AC1F599D700315C2C902 /* Message.swift in Sources */,

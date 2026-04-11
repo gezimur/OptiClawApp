@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import StoreKit
 
 @MainActor
 class ChatViewModel: ObservableObject {
@@ -11,10 +12,41 @@ class ChatViewModel: ObservableObject {
     @Published var networkError: String?
     @Published var selectedCategory: ChatCategory?
     @Published var showPaywall = false
+    @Published var isProUser = false
 
-    var isProUser = false
     private let freeMessageLimit = 3
     var userMessageCount: Int { messages.filter(\.isUser).count }
+
+    private var subscriptionTask: Task<Void, Never>?
+
+    init() {
+        startSubscriptionPolling()
+    }
+
+    deinit {
+        subscriptionTask?.cancel()
+    }
+
+    private func startSubscriptionPolling() {
+        subscriptionTask = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.checkSubscriptionStatus()
+                try? await Task.sleep(for: .seconds(10))
+            }
+        }
+    }
+
+    private func checkSubscriptionStatus() async {
+        var hasActive = false
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let transaction) = result,
+               transaction.revocationDate == nil {
+                hasActive = true
+                break
+            }
+        }
+        isProUser = hasActive
+    }
 
     func sendMessage(_ text: String, image: UIImage? = nil) {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || image != nil else { return }
