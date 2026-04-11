@@ -4,7 +4,7 @@ import SwiftUI
 struct OptiClawApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            MainView()
                 .preferredColorScheme(.dark)
         }
     }

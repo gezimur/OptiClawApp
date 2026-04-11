@@ -2,70 +2,13 @@ import SwiftUI
 
 struct HistoryView: View {
     @ObservedObject var historyManager: ChatHistoryManager
-    @Environment(\.dismiss) private var dismiss
-    @State private var showClearConfirm = false
     
-    let loadSession: () -> Void
+    let navigateTo: (AppNavigation) -> Void
 
     var body: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
-
-            // Top glow
             VStack {
-                EllipticalGradient(
-                    colors: [
-                        AppTheme.topGlow.opacity(0.45),
-                        AppTheme.topGlow.opacity(0.15),
-                        Color.clear
-                    ],
-                    center: .top,
-                    startRadiusFraction: 0.0,
-                    endRadiusFraction: 0.7
-                )
-                .frame(height: 300)
-                .ignoresSafeArea(edges: .top)
-                Spacer()
-            }
-
-            VStack(spacing: 0) {
-                // Nav bar
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image("icon_arrow_back")
-                            .renderingMode(.template)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                            .background(AppTheme.cardBg)
-                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-
-                    Spacer()
-
-                    Text("History")
-                        .font(AppTheme.medium(18))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Button(action: { showClearConfirm = true }) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white.opacity(historyManager.sessions.isEmpty ? 0.3 : 1))
-                            .frame(width: 44, height: 44)
-                            .background(AppTheme.cardBg)
-                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-                    .disabled(historyManager.sessions.isEmpty)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 8)
+                makeNavigationView()
 
                 if historyManager.sessions.isEmpty {
                     Spacer()
@@ -82,7 +25,7 @@ struct HistoryView: View {
                         ForEach(historyManager.sessions) { session in
                             Button(action: {
                                 historyManager.makeSessionActive(id: session.id)
-                                loadSession()
+                                navigateTo(.chat)
                             }){
                                 HStack(spacing: 12) {
                                     Image("mascot")
@@ -115,7 +58,7 @@ struct HistoryView: View {
                                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
-                            .id(session.id)//(value: )
+                            .id(session.id)
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -134,10 +77,10 @@ struct HistoryView: View {
             }
 
             // Clear all confirmation
-            if showClearConfirm {
+            if historyManager.showClearConfirm {
                 Color.black.opacity(0.6)
                     .ignoresSafeArea()
-                    .onTapGesture { showClearConfirm = false }
+                    .onTapGesture { historyManager.showClearConfirm = false }
 
                 VStack {
                     Spacer()
@@ -155,7 +98,7 @@ struct HistoryView: View {
                         VStack(spacing: 10) {
                             Button {
                                 historyManager.clearAll()
-                                showClearConfirm = false
+                                historyManager.showClearConfirm = false
                             } label: {
                                 Text("Clear all")
                                     .font(AppTheme.medium(16))
@@ -166,7 +109,7 @@ struct HistoryView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 20))
                             }
 
-                            Button { showClearConfirm = false } label: {
+                            Button { historyManager.showClearConfirm = false } label: {
                                 Text("Cancel")
                                     .font(AppTheme.medium(16))
                                     .foregroundColor(.white)
@@ -194,8 +137,49 @@ struct HistoryView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: showClearConfirm)
+        .animation(.easeInOut(duration: 0.3), value: historyManager.showClearConfirm)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+    }
+    
+    
+    private func makeNavigationView() -> some View{
+        HStack {
+            Button(action: { navigateTo(.back) }) {
+                Image("icon_arrow_back")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 24, height: 24)
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .background(AppTheme.cardBg)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            Spacer()
+
+            Text("History")
+                .font(AppTheme.medium(18))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            Button(action: { historyManager.showClearConfirm = true }) {
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white.opacity(historyManager.sessions.isEmpty ? 0.3 : 1))
+                    .frame(width: 44, height: 44)
+                    .background(AppTheme.cardBg)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .disabled(historyManager.sessions.isEmpty)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(.gray.opacity(0.0))
     }
 }

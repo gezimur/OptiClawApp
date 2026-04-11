@@ -13,7 +13,7 @@
 		242242918B2E8754CB5DD737 /* PoppinsMedium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ED6421855855E3941DF10B79 /* PoppinsMedium.ttf */; };
 		4941388FA6AEE168EB6DD68A /* PoppinsRegular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0EE6A3AB455EBAEF156A4DF6 /* PoppinsRegular.ttf */; };
 		499B45C840AB6E4A75BB4E5C /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F745B58E8E14AF67247135 /* HistoryView.swift */; };
-		49DB39EFBEA85E9A34D114DC /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A90E19869BBA4301131765D /* HomeView.swift */; };
+		49DB39EFBEA85E9A34D114DC /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A90E19869BBA4301131765D /* MainView.swift */; };
 		54BE6ACD353927C8DA28D7C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 69741C23C0B4322266E3FBEB /* Assets.xcassets */; };
 		56241DD727F03B2B32B17D63 /* MessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB5256259FC33FCD0B137F1 /* MessageBubbleView.swift */; };
 		6364A55847EDCBAE86F015AF /* TypingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E786A2A890CE643FD8F56A /* TypingIndicatorView.swift */; };
@@ -31,7 +31,7 @@
 /* Begin PBXFileReference section */
 		01F745B58E8E14AF67247135 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		05EF33C279CE92569CB63B00 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
-		0A90E19869BBA4301131765D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		0A90E19869BBA4301131765D /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		0EE6A3AB455EBAEF156A4DF6 /* PoppinsRegular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = PoppinsRegular.ttf; sourceTree = "<group>"; };
 		17E17EB421059A070A2F663E /* ChatCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCategory.swift; sourceTree = "<group>"; };
 		31CD0CB9E3C92F02AF8F4E34 /* mascot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot.png; sourceTree = "<group>"; };
@@ -127,7 +127,7 @@
 			children = (
 				D8746347AB5E9AD4888CE854 /* ChatView.swift */,
 				01F745B58E8E14AF67247135 /* HistoryView.swift */,
-				0A90E19869BBA4301131765D /* HomeView.swift */,
+				0A90E19869BBA4301131765D /* MainView.swift */,
 				65EB16132FA0DADADD78EBE3 /* SettingsView.swift */,
 				FE6133AA01A5D3E162EB7BFB /* Components */,
 			);
@@ -226,7 +226,7 @@
 				BE4A83AD6D47ED5630F7C3A1 /* ChatView.swift in Sources */,
 				9ADCC025EE078D5FB3629670 /* ChatViewModel.swift in Sources */,
 				499B45C840AB6E4A75BB4E5C /* HistoryView.swift in Sources */,
-				49DB39EFBEA85E9A34D114DC /* HomeView.swift in Sources */,
+				49DB39EFBEA85E9A34D114DC /* MainView.swift in Sources */,
 				ACF1AC1F599D700315C2C902 /* Message.swift in Sources */,
 				56241DD727F03B2B32B17D63 /* MessageBubbleView.swift in Sources */,
 				FDEB43B51022B685CA7979B7 /* OptiClawApp.swift in Sources */,

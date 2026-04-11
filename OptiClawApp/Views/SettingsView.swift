@@ -2,97 +2,79 @@ import SwiftUI
 import StoreKit
 
 struct SettingsView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
+    
+    var navigateTo: (AppNavigation) -> Void
 
     var body: some View {
-        ZStack {
-            AppTheme.background.ignoresSafeArea()
-
-            // Top glow
-            VStack {
-                EllipticalGradient(
-                    colors: [
-                        AppTheme.topGlow.opacity(0.45),
-                        AppTheme.topGlow.opacity(0.15),
-                        Color.clear
-                    ],
-                    center: .top,
-                    startRadiusFraction: 0.0,
-                    endRadiusFraction: 0.7
-                )
-                .frame(height: 300)
-                .ignoresSafeArea(edges: .top)
-                Spacer()
-            }
-
-            VStack(spacing: 0) {
-                // Nav bar
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image("icon_arrow_back")
-                            .renderingMode(.template)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                            .background(AppTheme.cardBg)
-                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                    }
-
-                    Spacer()
-
-                    Text("Settings")
-                        .font(AppTheme.medium(18))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Color.clear.frame(width: 44, height: 44)
+        ScrollView {
+            VStack(spacing: 8) {
+                makeNavigationView()
+                
+                settingsRow(emoji: "⭐️", title: "Rate Us") {
+                    requestReview()
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 8)
 
-                ScrollView {
-                    VStack(spacing: 8) {
-                        settingsRow(emoji: "⭐️", title: "Rate Us") {
-                            requestReview()
-                        }
+                settingsRow(emoji: "🔗", title: "Share App") {
+                    shareApp()
+                }
 
-                        settingsRow(emoji: "🔗", title: "Share App") {
-                            shareApp()
-                        }
-
-                        settingsRow(emoji: "💌", title: "Contact Us") {
-                            if let url = URL(string: "mailto:support@opticlaw.app") {
-                                UIApplication.shared.open(url)
-                            }
-                        }
-
-                        settingsRow(emoji: "🔒", title: "Privacy Policy") {
-                            if let url = URL(string: "https://opticlaw.app/privacy") {
-                                UIApplication.shared.open(url)
-                            }
-                        }
-
-                        settingsRow(emoji: "📄", title: "Terms of Use") {
-                            if let url = URL(string: "https://opticlaw.app/terms") {
-                                UIApplication.shared.open(url)
-                            }
-                        }
+                settingsRow(emoji: "💌", title: "Contact Us") {
+                    if let url = URL(string: "mailto:support@opticlaw.app") {
+                        UIApplication.shared.open(url)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                }
+
+                settingsRow(emoji: "🔒", title: "Privacy Policy") {
+                    if let url = URL(string: "https://opticlaw.app/privacy") {
+                        UIApplication.shared.open(url)
+                    }
+                }
+
+                settingsRow(emoji: "📄", title: "Terms of Use") {
+                    if let url = URL(string: "https://opticlaw.app/terms") {
+                        UIApplication.shared.open(url)
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .background(.gray.opacity(0.0))
     }
 
+    private func makeNavigationView() -> some View{
+        HStack {
+            Button(action: { navigateTo(.back) }) {
+                Image("icon_arrow_back")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 24, height: 24)
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .background(AppTheme.cardBg)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            Spacer()
+
+            Text("Settings")
+                .font(AppTheme.medium(18))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+    }
+    
     private func settingsRow(emoji: String, title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {

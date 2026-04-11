@@ -2,9 +2,58 @@ import SwiftUI
 import Combine
 import PhotosUI
 
+struct ChatNavigationView: View {
+    @ObservedObject var viewModel: ChatViewModel
+    
+    var startNewChat: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: { startNewChat() }) {
+                    Image("icon_arrow_back")
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.cardBg)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                Spacer()
+                Text("OptiClaw")
+                    .font(AppTheme.medium(18))
+                    .foregroundColor(.white)
+                Spacer()
+                Button(action: { viewModel.showNewChatSheet = true }) {
+                    Image("icon_new_chat")
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(AppTheme.cardBg)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            
+            if let error = viewModel.networkError {
+                ErrorBannerView(message: error).padding(.top, 4)
+            }
+        }
+        
+    }
+}
+
 struct ChatView: View {
     @ObservedObject var viewModel: ChatViewModel
-    @Environment(\.dismiss) private var dismiss
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
     
@@ -26,33 +75,8 @@ struct ChatView: View {
 
     var body: some View {
         ZStack {
-            // Background + glow (same as HomeView)
-            AppTheme.background.ignoresSafeArea()
-            VStack {
-                EllipticalGradient(
-                    colors: [
-                        AppTheme.topGlow.opacity(0.45),
-                        AppTheme.topGlow.opacity(0.15),
-                        Color.clear
-                    ],
-                    center: .top,
-                    startRadiusFraction: 0.0,
-                    endRadiusFraction: 0.7
-                )
-                .frame(height: 300)
-                .ignoresSafeArea(edges: .top)
-                Spacer()
-            }
-
             // Main content
             VStack(spacing: 0) {
-                // Nav bar
-                VStack(spacing: 0) {
-                    customNavBar
-                    if let error = viewModel.networkError {
-                        ErrorBannerView(message: error).padding(.top, 4)
-                    }
-                }
 
                 // Chat scroll
                 ScrollViewReader { proxy in
@@ -60,9 +84,9 @@ struct ChatView: View {
                         VStack(spacing: 0) {
                             Spacer(minLength: 0)
                             LazyVStack(spacing: 16) {
-                                if viewModel.messages.isEmpty {
-                                    aiBubble("Hi! I'm OptiClaw. How can I help you today?")
-                                }
+//                                if viewModel.messages.isEmpty {
+//                                    aiBubble("Hi! I'm OptiClaw. How can I help you today?")
+//                                }
                                 ForEach(Array(viewModel.messages.enumerated()), id: \.element.id) { idx, msg in
                                     MessageBubbleView(
                                         message: msg,
@@ -168,8 +192,7 @@ struct ChatView: View {
                     NewChatSheetView(
                         onStartNew: {
                             startNewChat()
-                            viewModel.selectedCategory = nil
-                            viewModel.showNewChatSheet = false
+                            viewModel.messages.append(Message(content: "Hi! I'm OptiClaw. How can I help you today?", isUser: false))
                         },
                         onCancel: { viewModel.showNewChatSheet = false }
                     ).padding(.bottom, 10)
@@ -210,6 +233,7 @@ struct ChatView: View {
                 await MainActor.run { selectedImageItem = nil }
             }
         }
+        .background(.gray.opacity(0.0))
     }
 
     // MARK: - Scroll Edge Fade Mask
@@ -244,44 +268,6 @@ struct ChatView: View {
             )
             .frame(height: 40)
         }
-    }
-
-    // MARK: - Nav Bar
-    private var customNavBar: some View {
-        HStack {
-            Button(action: { dismiss() }) {
-                Image("icon_arrow_back")
-                    .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 24, height: 24)
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(AppTheme.cardBg)
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-            Spacer()
-            Text("OptiClaw")
-                .font(AppTheme.medium(18))
-                .foregroundColor(.white)
-            Spacer()
-            Button(action: { viewModel.showNewChatSheet = true }) {
-                Image("icon_new_chat")
-                    .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 24, height: 24)
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(AppTheme.cardBg)
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderColor, lineWidth: 1))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
     }
 
     // MARK: - AI Bubble

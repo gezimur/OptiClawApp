@@ -16,6 +16,7 @@ struct ChatSession: Identifiable {
 
 @MainActor
 class ChatHistoryManager: ObservableObject {
+    @Published var showClearConfirm = false
     @Published var sessions: [ChatSession] = []
     private var activeSessionID: UUID? = nil
 
