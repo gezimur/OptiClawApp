@@ -57,7 +57,7 @@ class ChatViewModel: ObservableObject {
         }
 
         let imagePath = image.flatMap { saveImage($0) }
-        let userMessage = Message(content: text, isUser: true, imagePath: imagePath)
+        let userMessage = Message(id: messages.count, content: text, isUser: true, imagePath: imagePath)
         messages.append(userMessage)
         simulateAIResponse()
     }
@@ -73,7 +73,7 @@ class ChatViewModel: ObservableObject {
     func startCategoryChat(_ category: ChatCategory) {
         selectedCategory = category
         messages = []
-        let aiMessage = Message(content: category.initialMessage, isUser: false)
+        let aiMessage = Message(id: messages.count, content: category.initialMessage, isUser: false)
         messages.append(aiMessage)
     }
 
@@ -97,6 +97,7 @@ class ChatViewModel: ObservableObject {
             guard let self else { return }
             self.isTyping = false
             let response = Message(
+                id: self.messages.count,
                 content: "Here are some of the best ways to invest money:\n\nStock Market: Investing in individual stocks or exchange-traded funds (ETFs) can offer significant growth potential, though it comes with higher risk.\n\nMutual Funds: These funds pool money from multiple investors to invest in a diversified portfolio of stocks, bonds, or other securities. They are managed by professionals.\n\nBonds: Investing in government or corporate bonds can provide steady income with lower risk compared to stocks, making them a more conservative investment option.",
                 isUser: false
             )

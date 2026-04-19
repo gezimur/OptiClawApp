@@ -192,7 +192,7 @@ struct ChatView: View {
                     NewChatSheetView(
                         onStartNew: {
                             startNewChat()
-                            viewModel.messages.append(Message(content: "Hi! I'm OptiClaw. How can I help you today?", isUser: false))
+                            viewModel.messages.append(Message(id: viewModel.messages.count, content: "Hi! I'm OptiClaw. How can I help you today?", isUser: false))
                         },
                         onCancel: { viewModel.showNewChatSheet = false }
                     ).padding(.bottom, 10)
