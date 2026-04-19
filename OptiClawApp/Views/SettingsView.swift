@@ -2,40 +2,28 @@ import SwiftUI
 import StoreKit
 
 struct SettingsView: View {
+    enum SettingsPages {
+        case base, ai_agent
+    }
+    
     @Environment(\.requestReview) private var requestReview
+    @State private var currentPage = SettingsPages.base
+    @State private var api_key: String = ""
     
     var navigateTo: (AppNavigation) -> Void
+    var agentSettingsSubscriber: (String, String) -> Void
 
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
                 makeNavigationView()
                 
-                settingsRow(emoji: "⭐️", title: "Rate Us") {
-                    requestReview()
+                if currentPage == .base {
+                    makeBaseSettingsView()
+                } else if currentPage == .ai_agent {
+                    makeAiSettingsView()
                 }
-
-                settingsRow(emoji: "🔗", title: "Share App") {
-                    shareApp()
-                }
-
-                settingsRow(emoji: "💌", title: "Contact Us") {
-                    if let url = URL(string: "mailto:support@opticlaw.app") {
-                        UIApplication.shared.open(url)
-                    }
-                }
-
-                settingsRow(emoji: "🔒", title: "Privacy Policy") {
-                    if let url = URL(string: "https://opticlaw.app/privacy") {
-                        UIApplication.shared.open(url)
-                    }
-                }
-
-                settingsRow(emoji: "📄", title: "Terms of Use") {
-                    if let url = URL(string: "https://opticlaw.app/terms") {
-                        UIApplication.shared.open(url)
-                    }
-                }
+                
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -45,9 +33,84 @@ struct SettingsView: View {
         .background(.gray.opacity(0.0))
     }
 
+    private func makeBaseSettingsView() -> some View {
+        VStack {
+            settingsRow(emoji: ":)", title: "AI Agent", action: {
+                currentPage = .ai_agent
+            })
+            
+            settingsRow(emoji: "⭐️", title: "Rate Us") {
+                requestReview()
+            }
+
+            settingsRow(emoji: "🔗", title: "Share App") {
+                shareApp()
+            }
+
+            settingsRow(emoji: "💌", title: "Contact Us") {
+                if let url = URL(string: "mailto:support@opticlaw.app") {
+                    UIApplication.shared.open(url)
+                }
+            }
+
+            settingsRow(emoji: "🔒", title: "Privacy Policy") {
+                if let url = URL(string: "https://opticlaw.app/privacy") {
+                    UIApplication.shared.open(url)
+                }
+            }
+
+            settingsRow(emoji: "📄", title: "Terms of Use") {
+                if let url = URL(string: "https://opticlaw.app/terms") {
+                    UIApplication.shared.open(url)
+                }
+            }
+        }
+    }
+    
+    private func makeAiSettingsView() -> some View {
+        VStack {
+            
+            TextField("", text: $api_key, prompt: Text("Copy your key here").foregroundColor(AppTheme.placeholderText), axis: .vertical)
+                .font(AppTheme.regular(15))
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            
+            Spacer()
+            
+            Button(action: {
+                CacheManager.shared.set(key: "models/current", value: "chat_gpt")
+                CacheManager.shared.set(key: "models/chat_gpt/api_key", value: api_key)
+                
+                agentSettingsSubscriber("chat_gpt", api_key)
+                
+            }) {
+                HStack {
+                    Text("Confirm")
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(AppTheme.cardBg)
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+        }
+    }
+    
     private func makeNavigationView() -> some View{
         HStack {
-            Button(action: { navigateTo(.back) }) {
+            Button(action: {
+                if currentPage == .base{
+                    navigateTo(.back)
+                } else {
+                    currentPage = .base
+                }
+                
+            }) {
                 Image("icon_arrow_back")
                     .renderingMode(.template)
                     .resizable()
@@ -62,9 +125,15 @@ struct SettingsView: View {
 
             Spacer()
 
-            Text("Settings")
-                .font(AppTheme.medium(18))
-                .foregroundColor(.white)
+            if currentPage == .base {
+                Text("Settings")
+                    .font(AppTheme.medium(18))
+                    .foregroundColor(.white)
+            } else if currentPage == .ai_agent {
+                Text("AI Agent")
+                    .font(AppTheme.medium(18))
+                    .foregroundColor(.white)
+            }
 
             Spacer()
 

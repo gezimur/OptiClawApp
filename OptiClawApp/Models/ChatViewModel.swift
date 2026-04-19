@@ -18,34 +18,19 @@ class ChatViewModel: ObservableObject {
     var userMessageCount: Int { messages.filter(\.isUser).count }
 
     private var subscriptionTask: Task<Void, Never>?
+    
+    private var agentConnector: AIAgentConnector?
 
     init() {
         startSubscriptionPolling()
+
+        guard let ai_model: String = CacheManager.shared.get(key: "models/current") else {return }
+        guard let api_key: String = CacheManager.shared.get(key: "models/" + ai_model + "/api_key") else {return }
+        setAgentSettings(model: ai_model, api_key: api_key)
     }
 
     deinit {
         subscriptionTask?.cancel()
-    }
-
-    private func startSubscriptionPolling() {
-        subscriptionTask = Task { [weak self] in
-            while !Task.isCancelled {
-                await self?.checkSubscriptionStatus()
-                try? await Task.sleep(for: .seconds(10))
-            }
-        }
-    }
-
-    private func checkSubscriptionStatus() async {
-        var hasActive = false
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result,
-               transaction.revocationDate == nil {
-                hasActive = true
-                break
-            }
-        }
-        isProUser = hasActive
     }
 
     func sendMessage(_ text: String, image: UIImage? = nil) {
@@ -59,15 +44,11 @@ class ChatViewModel: ObservableObject {
         let imagePath = image.flatMap { saveImage($0) }
         let userMessage = Message(id: messages.count, content: text, isUser: true, imagePath: imagePath)
         messages.append(userMessage)
-        simulateAIResponse()
-    }
-
-    private func saveImage(_ image: UIImage) -> String? {
-        guard let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
-              let data = image.jpegData(compressionQuality: 0.8) else { return nil }
-        let fileURL = cachesDir.appendingPathComponent(UUID().uuidString + ".jpg")
-        try? data.write(to: fileURL)
-        return fileURL.path
+        
+        if self.agentConnector != nil {
+            self.isTyping = true
+            self.agentConnector?.sendMessage(message: userMessage)
+        }
     }
 
     func startCategoryChat(_ category: ChatCategory) {
@@ -88,95 +69,173 @@ class ChatViewModel: ObservableObject {
     func regenerateLastResponse() {
         guard let lastAIIndex = messages.lastIndex(where: { !$0.isUser }) else { return }
         messages.remove(at: lastAIIndex)
-        simulateAIResponse()
+        
+        guard messages.isEmpty == false else { return }
+        if self.agentConnector != nil {
+            self.isTyping = true
+            self.agentConnector?.sendMessage(message: messages.last!)
+        }
     }
 
-    private func simulateAIResponse() {
-        isTyping = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            guard let self else { return }
-            self.isTyping = false
-            let response = Message(
-                id: self.messages.count,
-                content: "Here are some of the best ways to invest money:\n\nStock Market: Investing in individual stocks or exchange-traded funds (ETFs) can offer significant growth potential, though it comes with higher risk.\n\nMutual Funds: These funds pool money from multiple investors to invest in a diversified portfolio of stocks, bonds, or other securities. They are managed by professionals.\n\nBonds: Investing in government or corporate bonds can provide steady income with lower risk compared to stocks, making them a more conservative investment option.",
-                isUser: false
-            )
-            self.messages.append(response)
+    func setAgentSettings(model: String, api_key: String){
+        if self.agentConnector != nil {
+            self.agentConnector?.unsubscribe()
+        }
+        
+        if (self.agentConnector == nil) || (self.agentConnector!.getModel() != model) {
+            if model == "chat_gpt" {
+                self.agentConnector = ChatGptConnector(api_key: api_key)
+                self.agentConnector?.subscribeOnResponse(subscriber: {
+                    (response: Message) in
+                    
+                    self.messages.append(response)
+                    self.isTyping = false
+                })
+                print("model created: ChatGptConnector")
+            } else {
+                print("unknown model passed")
+            }
+        }
+    }
+    
+    private func startSubscriptionPolling() {
+        subscriptionTask = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.checkSubscriptionStatus()
+                try? await Task.sleep(for: .seconds(10))
+            }
+        }
+    }
+
+    private func checkSubscriptionStatus() async {
+        var hasActive = false
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let transaction) = result,
+               transaction.revocationDate == nil {
+                hasActive = true
+                break
+            }
+        }
+        isProUser = hasActive
+    }
+    
+    private func saveImage(_ image: UIImage) -> String? {
+        guard let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
+              let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+        let fileURL = cachesDir.appendingPathComponent(UUID().uuidString + ".jpg")
+        try? data.write(to: fileURL)
+        return fileURL.path
+    }
+}
+
+class AIAgentConnector {
+    var subscriber: ((Message)->Void)? = nil
+    
+    func unsubscribe(){
+        subscriber = nil
+    }
+    func sendMessage(message: Message) {}
+    func subscribeOnResponse(subscriber: @escaping (Message)->Void) {
+        self.subscriber = subscriber
+    }
+    
+    func getModel() -> String {
+        return "not implemented"
+    }
+    
+    func sendResponse(_ response: Message) {
+        if self.subscriber == nil {
+            return
+            
+        }
+        
+        DispatchQueue.main.async{
+            self.subscriber!(response)
         }
     }
 }
 
-//class AIConnector {
-//    private var api_url: String = ""
-//    private var api_key: String = ""
-//    
-//    func askChat(message: String) -> Void {
-//        guard let url = URL(string: api_url) else { return }
-//
-//        let messages = [
-//            ["role": "system", "content": "You are a helpful assistant."],
-//            ["role": "user", "content": message]
-//        ]
-//
-//        let json: [String: Any] = [
-//            "model": "gpt-4o-mini",
-//            "messages": messages,
-//            "response_format": [
-//                                    "type": "text"
-//                                ]
-//        ]
-//
-//        guard let json_data = try? JSONSerialization.data(withJSONObject: json) else { return }
-//
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "POST"
-//        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//        request.setValue("Bearer \(api_key)", forHTTPHeaderField: "Authorization")
-//        request.httpBody = json_data
-//
-//        Task {
-//            do {
-//                let (response_data, _) = try await URLSession.shared.data(for: request)
-//                
-//                let decoder = JSONDecoder()
-//                let openAIResponse = try decoder.decode(OpenAIResponse.self, from: response_data)
-//                
-//                if (openAIResponse.error == nil) {
-//                    if (openAIResponse.output != nil){
-//                        let response_output = openAIResponse.output!
-//                        self.subscriber(response_output.first!.content.first!.text)
-//                    }
-//                } else {
-//                    self.subscriber(openAIResponse.error!.message)
-//                }
-//                
-//            } catch let error {
-//                print("Error occured: ", error.localizedDescription)
-//            }
-//        }
-//    }
-//}
-//
-//
-//
-//// MARK: - Response Models
-//struct OpenAIResponse: Codable {
-//let error: ErrorContent?
-//let output: [ChatResponce]?
-//}
-//
-//struct ChatResponce: Codable {
-//let content: [ChatContent]
-//}
-//
-//struct ChatContent: Codable {
-//let type: String
-//let text: String
-//let annotations: [String]
-//}
-//
-//struct ErrorContent: Codable {
-//let type: String
-//let message: String
-//let code: String
-//}
+class ChatGptConnector: AIAgentConnector {
+    private var api_key: String = ""
+    
+    init(api_key: String) {
+        self.api_key = api_key
+    }
+    
+    override func getModel() -> String {
+        return "chat_gpt"
+    }
+    
+    override func sendMessage(message: Message) {
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else { return }
+
+        let messages = [
+            ["role": "system", "content": "You are a helpful assistant."],
+            ["role": "user", "content": message.content]
+        ]
+
+        let json: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": messages,
+            "response_format": [
+                                    "type": "text"
+                                ]
+        ]
+
+        guard let json_data = try? JSONSerialization.data(withJSONObject: json) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(api_key)", forHTTPHeaderField: "Authorization")
+        request.httpBody = json_data
+
+        Task {
+            do {
+                let (response_data, _) = try await URLSession.shared.data(for: request)
+                
+                let decoder = JSONDecoder()
+                let openAIResponse = try decoder.decode(OpenAIResponse.self, from: response_data)
+                
+                if (openAIResponse.error == nil) {
+                    if (openAIResponse.output != nil){
+                        let response_output = openAIResponse.output!
+                        let messageContent = response_output.first!.content.first!.text
+                        
+                        sendResponse(Message(id: message.id + 1, content: messageContent, isUser: false))
+                        
+                    }
+                } else {
+                    sendResponse(Message(id: message.id + 1, content: openAIResponse.error!.message, isUser: false))
+                }
+                
+            } catch let error {
+                print("Error occured: ", error.localizedDescription)
+                sendResponse(Message(id: message.id + 1, content: "Error occured: " + error.localizedDescription, isUser: false))
+            }
+        }
+    }
+}
+
+
+// MARK: - Response Models
+struct OpenAIResponse: Codable {
+let error: ErrorContent?
+let output: [ChatResponce]?
+}
+
+struct ChatResponce: Codable {
+let content: [ChatContent]
+}
+
+struct ChatContent: Codable {
+let type: String
+let text: String
+let annotations: [String]
+}
+
+struct ErrorContent: Codable {
+let type: String
+let message: String
+let code: String
+}

@@ -70,7 +70,10 @@ struct MainView: View {
                     ChatView(viewModel: viewModel, startNewChat: startNewChat)
                     
                 } else if location == AppNavigation.settings {
-                    SettingsView(navigateTo: navigate)
+                    SettingsView(navigateTo: navigate, agentSettingsSubscriber: {
+                        (model: String, api_key: String) in
+                        viewModel.setAgentSettings(model: model, api_key: api_key)
+                    })
                 } else if location == AppNavigation.history {
                     HistoryView(historyManager: historyManager, navigateTo: navigate)
                 } else { // by normal this code will never reached
