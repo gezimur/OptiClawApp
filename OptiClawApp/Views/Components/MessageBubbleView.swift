@@ -22,7 +22,8 @@ struct MessageBubbleView: View {
         HStack {
             Spacer(minLength: 60)
             VStack(alignment: .trailing, spacing: 8) {
-                if let img = message.image {
+                if let path = message.imagePath,
+                   let img = UIImage(contentsOfFile: path) {
                     Image(uiImage: img)
                         .resizable()
                         .aspectRatio(contentMode: .fill)

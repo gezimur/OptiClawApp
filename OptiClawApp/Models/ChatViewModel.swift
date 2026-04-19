@@ -56,9 +56,18 @@ class ChatViewModel: ObservableObject {
             return
         }
 
-        let userMessage = Message(content: text, isUser: true, image: image)
+        let imagePath = image.flatMap { saveImage($0) }
+        let userMessage = Message(content: text, isUser: true, imagePath: imagePath)
         messages.append(userMessage)
         simulateAIResponse()
+    }
+
+    private func saveImage(_ image: UIImage) -> String? {
+        guard let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
+              let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+        let fileURL = cachesDir.appendingPathComponent(UUID().uuidString + ".jpg")
+        try? data.write(to: fileURL)
+        return fileURL.path
     }
 
     func startCategoryChat(_ category: ChatCategory) {
@@ -95,3 +104,78 @@ class ChatViewModel: ObservableObject {
         }
     }
 }
+
+//class AIConnector {
+//    private var api_url: String = ""
+//    private var api_key: String = ""
+//    
+//    func askChat(message: String) -> Void {
+//        guard let url = URL(string: api_url) else { return }
+//
+//        let messages = [
+//            ["role": "system", "content": "You are a helpful assistant."],
+//            ["role": "user", "content": message]
+//        ]
+//
+//        let json: [String: Any] = [
+//            "model": "gpt-4o-mini",
+//            "messages": messages,
+//            "response_format": [
+//                                    "type": "text"
+//                                ]
+//        ]
+//
+//        guard let json_data = try? JSONSerialization.data(withJSONObject: json) else { return }
+//
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.setValue("Bearer \(api_key)", forHTTPHeaderField: "Authorization")
+//        request.httpBody = json_data
+//
+//        Task {
+//            do {
+//                let (response_data, _) = try await URLSession.shared.data(for: request)
+//                
+//                let decoder = JSONDecoder()
+//                let openAIResponse = try decoder.decode(OpenAIResponse.self, from: response_data)
+//                
+//                if (openAIResponse.error == nil) {
+//                    if (openAIResponse.output != nil){
+//                        let response_output = openAIResponse.output!
+//                        self.subscriber(response_output.first!.content.first!.text)
+//                    }
+//                } else {
+//                    self.subscriber(openAIResponse.error!.message)
+//                }
+//                
+//            } catch let error {
+//                print("Error occured: ", error.localizedDescription)
+//            }
+//        }
+//    }
+//}
+//
+//
+//
+//// MARK: - Response Models
+//struct OpenAIResponse: Codable {
+//let error: ErrorContent?
+//let output: [ChatResponce]?
+//}
+//
+//struct ChatResponce: Codable {
+//let content: [ChatContent]
+//}
+//
+//struct ChatContent: Codable {
+//let type: String
+//let text: String
+//let annotations: [String]
+//}
+//
+//struct ErrorContent: Codable {
+//let type: String
+//let message: String
+//let code: String
+//}
