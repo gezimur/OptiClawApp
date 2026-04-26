@@ -5,6 +5,9 @@ struct HistoryView: View {
     
     let navigateTo: (AppNavigation) -> Void
 
+    @State private var renamingSessionID: Int? = nil
+    @State private var renameText = ""
+
     var body: some View {
         ZStack {
             VStack {
@@ -27,7 +30,7 @@ struct HistoryView: View {
                                 historyManager.makeSessionActive(id: session.id)
                                 navigateTo(.chat)
                             }){
-                                HStack(spacing: 12) { // TODO: add rename func
+                                HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(session.title)
                                             .font(AppTheme.medium(15))
@@ -62,6 +65,15 @@ struct HistoryView: View {
                                 } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    renameText = session.title
+                                    renamingSessionID = session.id
+                                } label: {
+                                    Label("Rename", systemImage: "pencil")
+                                }
+                                .tint(.blue)
                             }
                         }
                     }
@@ -130,12 +142,83 @@ struct HistoryView: View {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+            // Rename popup
+            if renamingSessionID != nil {
+                Color.black.opacity(0.6)
+                    .ignoresSafeArea()
+                    .onTapGesture { renamingSessionID = nil }
+
+                VStack {
+                    Spacer()
+                    VStack(spacing: 16) {
+                        VStack(spacing: 8) {
+                            Text("Rename chat")
+                                .font(AppTheme.medium(24))
+                                .foregroundColor(.white)
+                            Text("Enter a new name for this conversation")
+                                .font(AppTheme.light(14))
+                                .foregroundColor(AppTheme.secondaryText)
+                                .multilineTextAlignment(.center)
+                        }
+
+                        TextField("", text: $renameText, prompt: Text("Chat name...").foregroundColor(AppTheme.placeholderText))
+                            .font(AppTheme.regular(15))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .frame(height: 52)
+                            .background(AppTheme.cardBg)
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppTheme.borderColor, lineWidth: 1))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                        VStack(spacing: 10) {
+                            Button {
+                                if let id = renamingSessionID {
+                                    historyManager.renameSession(id: id, newTitle: renameText)
+                                }
+                                renamingSessionID = nil
+                            } label: {
+                                Text("Save")
+                                    .font(AppTheme.medium(16))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 58)
+                                    .background(AppTheme.ctaGradient)
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                            }
+
+                            Button { renamingSessionID = nil } label: {
+                                Text("Cancel")
+                                    .font(AppTheme.medium(16))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 58)
+                                    .background(AppTheme.cardBg)
+                                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(AppTheme.borderColor, lineWidth: 1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 22)
+                    .padding(.bottom, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(AppTheme.background.opacity(0.85))
+                            .overlay(RoundedRectangle(cornerRadius: 30).fill(Color(red: 174/255, green: 18/255, blue: 41/255).opacity(0.12)))
+                    )
+                    .overlay(RoundedRectangle(cornerRadius: 30).stroke(AppTheme.borderColor, lineWidth: 1.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 30))
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 10)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .animation(.easeInOut(duration: 0.3), value: historyManager.showClearConfirm)
+        .animation(.easeInOut(duration: 0.3), value: renamingSessionID)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
     }
-    
     
     private func makeNavigationView() -> some View{
         HStack {

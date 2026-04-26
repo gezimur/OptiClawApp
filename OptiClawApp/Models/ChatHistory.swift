@@ -2,7 +2,7 @@ import Foundation
 
 struct ChatSession: Identifiable, Codable {
     let id: Int
-    let title: String
+    var title: String
     let preview: String
     let date: Date
     var messages: [Message]
@@ -68,7 +68,17 @@ class ChatHistoryManager: ObservableObject {
         return activeSessionID != nil
     }
 
+    func renameSession(id: Int, newTitle: String) {
+        print("rename session called: ", newTitle)
+        let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let idx = sessions.firstIndex(where: { $0.id == id }) else { return }
+        sessions[idx].title = trimmed
+        cacheSession(sessionIdx: idx)
+    }
+
     func deleteSession(_ session: ChatSession) {
+        print("delete session called: ", session.title)
         if let sessionIdx = sessions.firstIndex(where: {$0.id == session.id}) {
             CacheManager.shared.remove(key: "sessions/" + sessionIdx.description)
             sessions.removeAll { $0.id == session.id }
@@ -76,6 +86,7 @@ class ChatHistoryManager: ObservableObject {
     }
 
     func clearAll() {
+        print("clear all called")
         for i in [0..<sessions.count] {
             CacheManager.shared.remove(key: "sessions/" + i.description)
         }
