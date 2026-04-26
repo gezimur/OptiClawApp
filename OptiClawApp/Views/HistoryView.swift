@@ -27,13 +27,7 @@ struct HistoryView: View {
                                 historyManager.makeSessionActive(id: session.id)
                                 navigateTo(.chat)
                             }){
-                                HStack(spacing: 12) {
-                                    Image("mascot")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 40, height: 40)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-
+                                HStack(spacing: 12) { // TODO: add rename func
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(session.title)
                                             .font(AppTheme.medium(15))

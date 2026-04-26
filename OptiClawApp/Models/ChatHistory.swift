@@ -69,10 +69,16 @@ class ChatHistoryManager: ObservableObject {
     }
 
     func deleteSession(_ session: ChatSession) {
-        sessions.removeAll { $0.id == session.id }
+        if let sessionIdx = sessions.firstIndex(where: {$0.id == session.id}) {
+            CacheManager.shared.remove(key: "sessions/" + sessionIdx.description)
+            sessions.removeAll { $0.id == session.id }
+        }
     }
 
     func clearAll() {
+        for i in [0..<sessions.count] {
+            CacheManager.shared.remove(key: "sessions/" + i.description)
+        }
         sessions.removeAll()
     }
     
@@ -100,6 +106,5 @@ class ChatHistoryManager: ObservableObject {
     
     private func cacheSession(sessionIdx: Int) {
         CacheManager.shared.set(key: "sessions/" + sessionIdx.description, value: sessions[sessionIdx])
-        print("Cache session: " + sessionIdx.description)
     }
 }

@@ -52,6 +52,9 @@ struct ChatNavigationView: View {
     }
 }
 
+// TODO: Add blur to background
+// TODO: fix overlay background (make invisible)
+
 struct ChatView: View {
     @ObservedObject var viewModel: ChatViewModel
     @State private var inputText = ""

@@ -175,7 +175,7 @@ class ChatGptConnector: AIAgentConnector {
         ]
 
         let json: [String: Any] = [
-            "model": "gpt-4o-mini",
+            "model": "gpt-5.4-mini",
             "messages": messages,
             "response_format": [
                                     "type": "text"
