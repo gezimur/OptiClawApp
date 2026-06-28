@@ -12,6 +12,7 @@ private struct PopupBackground: ViewModifier {
                             .fill(Color(red: 174/255, green: 18/255, blue: 41/255).opacity(0.12))
                     )
                     .blur(radius: 0.5)
+                    .background(.ultraThinMaterial.opacity(0.8))
             )
             .overlay(RoundedRectangle(cornerRadius: 30).stroke(AppTheme.borderColor, lineWidth: 1.5))
             .clipShape(RoundedRectangle(cornerRadius: 30))

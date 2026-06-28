@@ -1,5 +1,28 @@
 import SwiftUI
 
+struct ActionsStacker: View {
+    public let doOnDelete: () -> Void
+    public let doOnRename: () -> Void
+    
+    var body: some View {
+        GeometryReader { containerSize in
+            VStack {
+                Button(role: .destructive) {
+                    doOnDelete()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                Button {
+                    doOnRename()
+                } label: {
+                    Label("Rename", systemImage: "pencil")
+                }
+            }
+        }
+        
+    }
+}
+
 struct HistoryView: View {
     @ObservedObject var historyManager: ChatHistoryManager
     
@@ -60,20 +83,12 @@ struct HistoryView: View {
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
+                                ActionsStacker(doOnDelete: {
                                     historyManager.deleteSession(session)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
+                                }, doOnRename: {
                                     renameText = session.title
                                     renamingSessionID = session.id
-                                } label: {
-                                    Label("Rename", systemImage: "pencil")
-                                }
-                                .tint(.blue)
+                                })
                             }
                         }
                     }

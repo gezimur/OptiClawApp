@@ -52,9 +52,6 @@ struct ChatNavigationView: View {
     }
 }
 
-// TODO: Add blur to background
-// TODO: fix overlay background (make invisible)
-
 struct ChatView: View {
     @ObservedObject var viewModel: ChatViewModel
     @State private var inputText = ""
@@ -188,10 +185,10 @@ struct ChatView: View {
 
             // New Chat popup
             if viewModel.showNewChatSheet {
-                Color.black.opacity(0.6).ignoresSafeArea()
-                    .onTapGesture { viewModel.showNewChatSheet = false }
+                
                 VStack {
-                    Spacer()
+                    Color.black.opacity(0.1).ignoresSafeArea()
+                        .onTapGesture { viewModel.showNewChatSheet = false }
                     NewChatSheetView(
                         onStartNew: {
                             startNewChat()
@@ -205,10 +202,9 @@ struct ChatView: View {
 
             // Paywall
             if viewModel.showPaywall {
-                Color.black.opacity(0.6).ignoresSafeArea()
-                    .onTapGesture { viewModel.showPaywall = false }
                 VStack {
-                    Spacer()
+                    Color.black.opacity(0.1).ignoresSafeArea()
+                        .onTapGesture { viewModel.showPaywall = false }
                     PaywallView(
                         onUpgrade: {
                             viewModel.isProUser = true
@@ -222,10 +218,9 @@ struct ChatView: View {
 
             // Attachment popup
             if viewModel.showAttachmentSheet {
-                Color.black.opacity(0.6).ignoresSafeArea()
-                    .onTapGesture { viewModel.showAttachmentSheet = false }
                 VStack {
-                    Spacer()
+                    Color.black.opacity(0.1).ignoresSafeArea()
+                        .onTapGesture { viewModel.showAttachmentSheet = false }
                     AttachmentSheetView(
                         onPickFromLibrary: {
                             viewModel.showAttachmentSheet = false

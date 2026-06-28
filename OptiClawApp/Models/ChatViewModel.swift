@@ -190,29 +190,47 @@ class ChatGptConnector: AIAgentConnector {
         request.setValue("Bearer \(api_key)", forHTTPHeaderField: "Authorization")
         request.httpBody = json_data
 
+        let fetchTask = Task {
+            let taskResult = try await sendImpl(message: request)
+            try Task.checkCancellation()
+            return taskResult
+        }
+                
+        let timeoutTask = Task {
+            try await Task.sleep(nanoseconds: 3 * 1000000000)
+            fetchTask.cancel()
+        }
         Task {
             do {
-                let (response_data, _) = try await URLSession.shared.data(for: request)
-                
-                let decoder = JSONDecoder()
-                let openAIResponse = try decoder.decode(OpenAIResponse.self, from: response_data)
-                
-                if (openAIResponse.error == nil) {
-                    if (openAIResponse.output != nil){
-                        let response_output = openAIResponse.output!
-                        let messageContent = response_output.first!.content.first!.text
-                        
-                        sendResponse(Message(id: message.id + 1, content: messageContent, isUser: false))
-                        
-                    }
-                } else {
-                    sendResponse(Message(id: message.id + 1, content: openAIResponse.error!.message, isUser: false))
-                }
-                
-            } catch let error {
+                let result = try await fetchTask.value
+                timeoutTask.cancel()
+                sendResponse(Message(id: message.id + 1, content: result, isUser: false))
+            } catch  let error {
                 print("Error occured: ", error.localizedDescription)
                 sendResponse(Message(id: message.id + 1, content: "Error occured: " + error.localizedDescription, isUser: false))
             }
+        }
+    }
+    
+    private func sendImpl(message: URLRequest) async throws -> String {
+        let (response_data, _) = try await URLSession.shared.data(for: message)
+        
+        let decoder = JSONDecoder()
+        let openAIResponse = try decoder.decode(OpenAIResponse.self, from: response_data)
+        
+        if (openAIResponse.error == nil) {
+            if (openAIResponse.output != nil){
+                let response_output = openAIResponse.output!
+                let messageContent = response_output.first!.content.first!.text
+                
+                return messageContent
+                
+            }
+            else {
+                return "Model don't answering"
+            }
+        } else {
+            return openAIResponse.error!.message
         }
     }
 }
